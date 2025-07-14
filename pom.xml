@@ -19,15 +19,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.openapitools.maven.its</groupId>
-    <artifactId>jaxrs-jersey2</artifactId>
+    <groupId>net.maxgigapop</groupId>
+    <artifactId>web-models</artifactId>
     <version>1.0-SNAPSHOT</version>
-
-    <properties>
-<!--
-        <maven.javadoc.skip>true</maven.javadoc.skip>
--->
-    </properties>
 
     <build>
         <plugins>
@@ -45,19 +39,14 @@
                 <artifactId>openapi-generator-maven-plugin</artifactId>
                 <version>7.14.0</version>
                 <configuration>
-<!--
-                    <inputSpec>https://raw.githubusercontent.com/OpenAPITools/openapi-generator/master/modules/openapi-generator/src/test/resources/3_0/petstore.yaml</inputSpec>
-                    <inputSpec>openapi-stackv-mine.yaml</inputSpec>
--->
                     <inputSpec>openapi-stackv-webapp-api.yaml</inputSpec>
                     <generatorName>jaxrs-spec</generatorName>
                     <dateLibrary>java8</dateLibrary>
-                    <output>${basedir}/out2</output>
-                    <templateDirectory>${project.basedir}/templates</templateDirectory>
-                    <modelPackage>net.maxgigapop.mrs.model</modelPackage>
-                    <apiPackage>net.maxgigapop.mrs.api</apiPackage>
+                    <modelPackage>net.maxgigapop.mrs.models</modelPackage>
+                    <apiPackage>net.maxgigapop.mrs.apis</apiPackage>
                     <configOptions>
-                    <interfaceOnly>true</interfaceOnly>
+                        <interfaceOnly>true</interfaceOnly>
+                        <sourceFolder>src/gen/java/main</sourceFolder>
                     </configOptions>
                 </configuration>
                 <executions>
@@ -72,4 +61,56 @@
             </plugin>
         </plugins>
     </build>
+  <dependencies>
+    <!-- AES added this to replace jakarta.ws.rs-api  2.1.1 is used by Stackv-->
+    <dependency>
+    <groupId>javax.ws.rs</groupId>
+    <artifactId>javax.ws.rs-api</artifactId>
+    <version>2.1.1</version>
+    </dependency>
+
+    <!-- AES added this for bean validation to replace jakarta.validation-api. Had to bump version to 2.0.0.Final both here and in stackv:
+             Handles List<@Valid AddressAllocation> annotation @javax.validation.Valid not applicable in this type context -->
+    <dependency>
+    <groupId>javax.validation</groupId>
+    <artifactId>validation-api</artifactId>
+    <version>2.0.0.Final</version>
+    </dependency>
+
+    <!-- AES changed version from 2.17.1 to 2.12.7 which is used by stackv -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jsr310</artifactId>
+      <version>2.12.7</version>
+    </dependency>
+
+    <!-- AES changed version from 2.17.1 to 2.12.3 which is used by stackv -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.jaxrs</groupId>
+      <artifactId>jackson-jaxrs-json-provider</artifactId>
+      <version>2.12.3</version>
+    </dependency>
+
+    <!-- AES changed version from 2.10.13 to 2.10.8 which is used by stackv -->
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+      <version>2.10.8</version>
+    </dependency>
+
+    <!-- AES added this to stackv-->
+    <dependency>
+      <groupId>javax.annotation</groupId>
+      <artifactId>javax.annotation-api</artifactId>
+      <version>1.3.2</version>
+    </dependency>
+
+    <!-- AES changed version from 1.5.3 to 1.6.2 which is used by stackv -->
+    <dependency>
+      <groupId>io.swagger</groupId>
+      <artifactId>swagger-annotations</artifactId>
+      <version>1.6.2</version>
+    </dependency>
+
+  </dependencies>
 </project>
