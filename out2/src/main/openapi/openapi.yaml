@@ -1,0 +1,2914 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: alberto.est.jimenez@gmail.com
+    name: Alberto Jimenez
+  description: Documentation for the client-accessible endpoints of the StackV orchestrator.
+  title: StackV Orchestrator Developer API
+  version: 0.8.2
+servers:
+- url: https://stackv.dev3.virnao.com/StackV-web/restapi/
+tags:
+- description: Administration tool endpoints.
+  name: admin
+- description: Alert and Notification endpoints.
+  name: alert
+- description: Address Pool subsystem endpoints.
+  name: address
+- description: RM Driver subsystem endpoints.
+  name: driver
+- description: Service instance operations.
+  name: instance
+- description: Service intent operations.
+  name: intent
+- description: SENSE Metadata endpoints.
+  name: metadata
+- description: Service profile operations.
+  name: profile
+- description: Task Controller endpoints.
+  name: task
+paths:
+  /instance:
+    get:
+      description: Retrieves UUID for new instance from backend.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                example: 3b7d41e1-b37f-4c64-84d2-d307b5e47370
+                type: string
+          description: Generated UUID.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Generate random UUID
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /instance/{search}:
+    get:
+      description: Retrieves the full status and details of a specified instance.
+      parameters:
+      - description: Service instance UUID or alias.
+        example:
+        - ae4d45d0-4420-42d6-8641-0a1012d47c99
+        - DNC OpenNSA 21
+        explode: false
+        in: path
+        name: search
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Root_Schema"
+          description: Full instance details object.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Get instance details.
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+    post:
+      description: Creates a new service instance with the given UUID and intent specification.
+      parameters:
+      - description: Service instance UUID.
+        explode: false
+        in: path
+        name: search
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceRequest"
+        description: Service instance creation request object.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+                type: string
+          description: "Service instance UUID, in case it was generated during workflow."
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Create new service instance
+      tags:
+      - instance
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /instance/{search}/status:
+    get:
+      description: Retrieves the full instance status.
+      parameters:
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: search
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                example: Create - FAILED
+                type: string
+          description: Concatenated instance superstate and substate.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Get instance status
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /instance/{siUUID}/substatus:
+    get:
+      description: Retrieves only the backend service status.
+      parameters:
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                description: The status of an instance as it proceeds through an orchestration
+                  phase.
+                enum:
+                - INIT
+                - COMPILED
+                - PROPAGATED
+                - COMMITTING
+                - COMMITTED
+                - READY
+                - FAILED
+                - ERROR
+                type: string
+          description: Workflow status.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Get instance substatus
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /instance/{siUUID}/status/phase:
+    get:
+      description: Retrieves the instance's orchestration phase.
+      parameters:
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/paths/~1instance~1%7BsiUUID%7D~1superstate~1%7Bstate%7D/put/parameters/1/schema"
+          description: Orchestration status.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Get instance phase
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+      - tag: admin
+  /instance/{siUUID}/status/configuration:
+    get:
+      description: Retrieves the instance's configuration status.
+      parameters:
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                description: The status of whether an instance is actively provisioned
+                  or configured.
+                enum:
+                - STABLE
+                - SCHEDULED
+                - EXPIRED
+                - PENDING
+                - UNSTABLE
+                - UNKNOWN
+                type: string
+          description: Configuration status.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Get instance configuration
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /instance/{siUUID}/superstate/{state}:
+    put:
+      description: Updates the orchestration phase of the specified service instance.
+      parameters:
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: New orchestration phase.
+        example: CANCEL
+        explode: false
+        in: path
+        name: state
+        required: true
+        schema:
+          description: The overarching phase of an instance's lifecycle.
+          enum:
+          - CREATE
+          - CANCEL
+          - REINSTATE
+          - MODIFY
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: No content response.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Change instance orchestration phase
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /instance/{siUUID}/{action}:
+    put:
+      description: Commit an operation for specified service instance.
+      parameters:
+      - description: service instance UUID
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: |-
+          Service operation requested
+           * `cancel` - Composite service to cancel, propagate, commit and verify instance.
+           * `release` - Composite service to cancel and propagate in 2-phase commit process.
+           * `verify` - Begin service verification process.
+        explode: false
+        in: path
+        name: action
+        required: true
+        schema:
+          $ref: "#/components/schemas/Operation"
+        style: simple
+      - description: Whether to commit the operation in a synchronous/blocking mode.
+        explode: true
+        in: query
+        name: sync
+        required: false
+        schema:
+          default: true
+          type: boolean
+        style: form
+      - description: "Whether to ensure service verifiction is run, even in the case\
+          \ of failure states."
+        explode: true
+        in: query
+        name: verify
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      - description: Whether to commit the operations in force mode.
+        explode: true
+        in: query
+        name: force
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      - description: Whether to automatically proceed through propagate and commit.
+        explode: true
+        in: query
+        name: proceed
+        required: false
+        schema:
+          default: true
+          type: boolean
+        style: form
+      - description: Explicit intent specified for certain operations.
+        explode: true
+        in: query
+        name: intent
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "204":
+          description: No content response.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Operate on a service instance
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /instance/{siUUID}/modify:
+    post:
+      description: "Composite service to modify/recompile, propagate, commit and verify\
+        \ (will create a new intent)"
+      parameters:
+      - description: service instance UUID
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceRequest"
+        description: Service instance creation request object.
+        required: true
+      responses:
+        "204":
+          description: No content response.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Modify a service instance
+      tags:
+      - instance
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /instance/{siUUID}/modifiable/{mode}:
+    put:
+      description: Enables or disables the modifiable option for the instance.
+      parameters:
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: New value.
+        explode: false
+        in: path
+        name: mode
+        required: true
+        schema:
+          type: boolean
+        style: simple
+      responses:
+        "204":
+          description: Successful set.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Set instance modifiable flag
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /instance/{siUUID}/last/{state}:
+    put:
+      description: Overwrites the last state of the instance.
+      parameters:
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: New state.
+        explode: false
+        in: path
+        name: state
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Successful set.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Set instance last state
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+      - tag: admin
+  /instance/{siUUID}/locked/{mode}:
+    put:
+      description: Enables or disables the locked option for the instance.
+      parameters:
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: New value.
+        explode: false
+        in: path
+        name: mode
+        required: true
+        schema:
+          type: boolean
+        style: simple
+      responses:
+        "204":
+          description: Successful set.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Set instance locked flag
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /instance/{siUUID}/drifting/correct:
+    put:
+      description: Commits the appropriate correction operation for an instance.
+      parameters:
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Successful operation start.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Correct a drifted instance
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /instance/{siUUID}/deltas:
+    get:
+      description: Retrieves the currently cached system and service deltas.
+      parameters:
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: search
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/_instance__siUUID__deltas_get_200_response"
+          description: "JSON map with each delta, if present."
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Get instance deltas
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /instance/{siUUID}/profile:
+    get:
+      description: Retrieves the currently cached system and service deltas.
+      parameters:
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: search
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/_instance__siUUID__deltas_get_200_response"
+          description: "JSON map with each delta, if present."
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Get instance deltas
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /instance/{siUUID}/plugins:
+    get:
+      description: Retrieves the array of plugin configurations for an instance.
+      parameters:
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/paths/~1instance~1%7BsiUUID%7D~1plugins~1%7Btype%7D/get/responses/200/content/application~1json/schema"
+                type: array
+          description: Array of plugin configuration objects.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Get instance plugins.
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /instance/{siUUID}/plugins/{type}:
+    get:
+      description: Retrieves a specific plugin configuration for an instance.
+      parameters:
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Service instance UUID.
+        example: drifting
+        explode: false
+        in: path
+        name: type
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/_instance__siUUID__plugins__type__get_200_response"
+          description: Plugin configuration object.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Get instance plugin.
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+    put:
+      description: Sets a specific plugin configuration for an instance.
+      parameters:
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Service instance UUID.
+        example: drifting
+        explode: false
+        in: path
+        name: type
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        description: New configuration value.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/paths/~1instance~1%7BsiUUID%7D~1plugins~1%7Btype%7D/get/responses/200/content/application~1json/schema"
+          description: New configuration object.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Set instance plugin.
+      tags:
+      - instance
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /instance/{siUUID}/schedule:
+    get:
+      description: Retrieves the current scheduling information for an instance.
+      parameters:
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/_instance__siUUID__schedule_get_200_response"
+          description: Schedule object.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Get instance schedule
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /instance/{siUUID}/{alias}:
+    put:
+      description: Changes the instance alias of a specified UUID.
+      parameters:
+      - description: Service instance UUID.
+        example: ae4d45d0-4420-42d6-8641-0a1012d47c99
+        explode: false
+        in: path
+        name: siUUID
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: New alias to set.
+        example: Test Instance 15
+        explode: false
+        in: path
+        name: alias
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: The new alias set to persistence.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Rename a service instance
+      tags:
+      - instance
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: instance
+  /address/pool:
+    get:
+      description: Retrieves all accessible address pools.
+      operationId: retrievePools
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/AddressPoolDTO"
+                type: array
+          description: List of basic address pool DTOs.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Retrieve Pools
+      tags:
+      - address
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: address
+    post:
+      description: Creates a new address pool.
+      operationId: createPool
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAddressPoolRequest"
+      responses:
+        "201":
+          description: Pool created.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Add New Pool
+      tags:
+      - address
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: address
+  /address/pool/{poolName}:
+    delete:
+      description: Deletes a specific address pool.
+      parameters:
+      - description: Name of the address pool.
+        example: Rucio Test Pool
+        explode: false
+        in: path
+        name: poolName
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Pool successfully deleted.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Delete Pool
+      tags:
+      - address
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: address
+    get:
+      description: Retrieves a specific address pool.
+      parameters:
+      - description: Name of the address pool.
+        example: Rucio Test Pool
+        explode: false
+        in: path
+        name: poolName
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddressPoolDTO"
+          description: The address pool DTO.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Retrieve Pool
+      tags:
+      - address
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: address
+  /address/allocate/{poolName}:
+    get:
+      description: Retrieves all allocations from a specified address pool.
+      parameters:
+      - description: Name of the address pool.
+        example: Rucio Test Pool
+        explode: false
+        in: path
+        name: poolName
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/AddressAllocation"
+                type: array
+          description: List of basic address pool DTOs.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Retrieve Address Pool Allocations
+      tags:
+      - address
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: address
+    post:
+      description: Allocates a new address from an address pool.
+      parameters:
+      - description: Name of the address pool.
+        example: Rucio Test Pool
+        explode: false
+        in: path
+        name: poolName
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AllocateAddressRequest"
+        description: Allocation request parameters.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+          description: List of addresses allocated.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Allocate Address
+      tags:
+      - address
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: address
+  /address/allocate/{poolName}/{scope}:
+    delete:
+      description: Remove all allocations within a pool matching a specific scope.
+      parameters:
+      - description: Name of the address pool.
+        example: Rucio Test Pool
+        explode: false
+        in: path
+        name: poolName
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Scope of the allocations requested.
+        example: default
+        explode: false
+        in: path
+        name: scope
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Addresses successfully deleted.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Delete Allocations by Scope
+      tags:
+      - address
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: address
+    get:
+      description: Retrieves all allocations from a specified address pool with a
+        specific scope.
+      parameters:
+      - description: Name of the address pool.
+        example: Rucio Test Pool
+        explode: false
+        in: path
+        name: poolName
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Scope of the allocations requested.
+        example: default
+        explode: false
+        in: path
+        name: scope
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/AddressAllocation"
+                type: array
+          description: List of basic address pool DTOs.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Retrieve Address Pool Allocations by Scope
+      tags:
+      - address
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: address
+  /address/allocate/{poolName}/{address}/{scope}:
+    delete:
+      description: Remove a specific allocation.
+      parameters:
+      - description: Name of the address pool.
+        example: Rucio Test Pool
+        explode: false
+        in: path
+        name: poolName
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Specific address (or 'all' for every address in scope).
+        example: fc00:1780::/64
+        explode: false
+        in: path
+        name: address
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Scope of the allocation.
+        example: default
+        explode: false
+        in: path
+        name: scope
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Pool successfully deleted.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Delete Allocation
+      tags:
+      - address
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: address
+  /address/access/{pool}:
+    delete:
+      description: Deletes all ACLs associated with a specified address pool.
+      parameters:
+      - description: ID of the address pool.
+        example: 31
+        explode: false
+        in: path
+        name: pool
+        required: true
+        schema:
+          type: number
+        style: simple
+      responses:
+        "204":
+          description: Deletion occurred without exception.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Clear Address Pool Access List
+      tags:
+      - address
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: address
+    get:
+      description: Retrieves all ACLs from a specified address pool.
+      parameters:
+      - description: Name of the address pool.
+        example: Rucio Test Pool
+        explode: false
+        in: path
+        name: pool
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/paths/~1address~1access~1%7BpoolName%7D~1%7Busername%7D/get/responses/200/content/application~1json/schema"
+                type: array
+          description: List of basic address pool DTOs.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Retrieve Address Pool Access List
+      tags:
+      - address
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: address
+  /address/access/{poolName}/{username}:
+    delete:
+      description: Deletes the ACL associated with a specified address pool and user.
+      parameters:
+      - description: Name of the address pool.
+        example: Rucio Test Pool
+        explode: false
+        in: path
+        name: poolName
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Username to assign permissions.
+        example: tester
+        explode: false
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/paths/~1address~1access~1%7BpoolName%7D~1%7Busername%7D/get/responses/200/content/application~1json/schema"
+          description: The ACL entry DTO.
+        "204":
+          description: Deletion not necessary. Entry not found.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Delete Address Pool Access List
+      tags:
+      - address
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: address
+    get:
+      description: Retrieve the ACL entry for a specified address pool and user.
+      parameters:
+      - description: Name of the address pool.
+        example: Rucio Test Pool
+        explode: false
+        in: path
+        name: poolName
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Username to assign permissions.
+        example: tester
+        explode: false
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Address_Pool_ACL"
+          description: The ACL entry DTO.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Retrieve Address Pool Access List
+      tags:
+      - address
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: address
+  /address/access/{poolName}/{username}/{level}:
+    put:
+      description: Updates the ACL entry for a specified address pool and user.
+      parameters:
+      - description: Name of the address pool.
+        example: Rucio Test Pool
+        explode: false
+        in: path
+        name: poolName
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Username to assign permissions.
+        example: tester
+        explode: false
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: New permission level to set.
+        example: READ
+        explode: false
+        in: path
+        name: level
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/paths/~1address~1access~1%7BpoolName%7D~1%7Busername%7D/get/responses/200/content/application~1json/schema"
+          description: The updated ACL entry DTO.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Update Address Pool Access List
+      tags:
+      - address
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: address
+  /meta:
+    get:
+      description: Retrieves all accessible metadata records.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/paths/~1meta~1%7Bdomain%7D~1%7Bname%7D/post/responses/200/content/application~1json/schema"
+                type: array
+          description: List of SENSE Metadata objects.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Get All Records
+      tags:
+      - metadata
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: metadata
+  /meta/{domain}:
+    get:
+      description: Retrieves all accessible metadata records under a specific domain.
+      parameters:
+      - description: "The domain of the metadata record, representing which platform\
+          \ or third party it relates to."
+        explode: false
+        in: path
+        name: domain
+        required: true
+        schema:
+          example: JANUS
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/paths/~1meta~1%7Bdomain%7D~1%7Bname%7D/post/responses/200/content/application~1json/schema"
+                type: array
+          description: List of SENSE Metadata objects.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Get Domain Records
+      tags:
+      - metadata
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: metadata
+  /meta/{domain}/{name}:
+    delete:
+      description: Removes a metadata record from the service.
+      parameters:
+      - description: "The domain of the metadata record, representing which platform\
+          \ or third party it relates to."
+        explode: false
+        in: path
+        name: domain
+        required: true
+        schema:
+          example: JANUS
+          type: string
+        style: simple
+      - description: The registered name of the metadata record.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          example: overview
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: An empty response.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Delete a Record
+      tags:
+      - metadata
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: metadata
+    get:
+      description: "Retrieves a specific metadata record value, or optionally the\
+        \ full record view."
+      parameters:
+      - description: "The domain of the metadata record, representing which platform\
+          \ or third party it relates to."
+        explode: false
+        in: path
+        name: domain
+        required: true
+        schema:
+          example: JANUS
+          type: string
+        style: simple
+      - description: The registered name of the metadata record.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          example: overview
+          type: string
+        style: simple
+      - description: Whether to return the full entity object instead of just the
+          parsed JSON value.
+        explode: true
+        in: query
+        name: full
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/_meta__domain___name__get_200_response"
+          description: "Either a full metadata object, or the value of the record\
+            \ parsed into JSON."
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Retrieve a Record
+      tags:
+      - metadata
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: metadata
+    post:
+      description: Creates or updates a metadata record with a new value object.
+      parameters:
+      - description: "The domain of the metadata record, representing which platform\
+          \ or third party it relates to."
+        explode: false
+        in: path
+        name: domain
+        required: true
+        schema:
+          example: JANUS
+          type: string
+        style: simple
+      - description: The registered name of the metadata record.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          example: overview
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/_meta__domain___name__post_request"
+        description: The new JSON value for the record.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SENSE_Metadata"
+          description: A full metadata object.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Register a Record
+      tags:
+      - metadata
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: metadata
+  /meta/{domain}/{name}/update:
+    put:
+      description: Updates a metadata record with updates to specific values.
+      parameters:
+      - description: "The domain of the metadata record, representing which platform\
+          \ or third party it relates to."
+        explode: false
+        in: path
+        name: domain
+        required: true
+        schema:
+          example: JANUS
+          type: string
+        style: simple
+      - description: The registered name of the metadata record.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          example: overview
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/SENSE_Metadata_Update_DTO"
+              type: array
+        description: A JSON array of update objects.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/paths/~1meta~1%7Bdomain%7D~1%7Bname%7D/post/responses/200/content/application~1json/schema"
+          description: A full metadata object.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Updates a Record
+      tags:
+      - metadata
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: metadata
+  /meta/{domain}/{name}/policy:
+    get:
+      description: Gets the list of associated policies with a metadata record.
+      parameters:
+      - description: "The domain of the metadata record, representing which platform\
+          \ or third party it relates to."
+        explode: false
+        in: path
+        name: domain
+        required: true
+        schema:
+          example: JANUS
+          type: string
+        style: simple
+      - description: The registered name of the metadata record.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          example: overview
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/paths/~1meta~1%7Bdomain%7D~1%7Bname%7D~1policy/post/responses/200/content/application~1json/schema"
+                type: array
+          description: An array of policy objects.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Retrieve Record Policies
+      tags:
+      - metadata
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: metadata
+    post:
+      description: Creates or updates a metadata policy against the specified record.
+      parameters:
+      - description: "The domain of the metadata record, representing which platform\
+          \ or third party it relates to."
+        explode: false
+        in: path
+        name: domain
+        required: true
+        schema:
+          example: JANUS
+          type: string
+        style: simple
+      - description: The registered name of the metadata record.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          example: overview
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SENSE_Metadata_Policy"
+        description: A policy update request object.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SENSE_Metadata_Policy_1"
+          description: A single metadata policy object.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Register a Policy
+      tags:
+      - metadata
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: metadata
+  /meta/{domain}/{name}/policy/id/{id}:
+    get:
+      description: Gets the a specific policy by its ID.
+      parameters:
+      - description: "The domain of the metadata record, representing which platform\
+          \ or third party it relates to."
+        explode: false
+        in: path
+        name: domain
+        required: true
+        schema:
+          example: JANUS
+          type: string
+        style: simple
+      - description: The registered name of the metadata record.
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          example: overview
+          type: string
+        style: simple
+      - description: The specified ID number of the policy.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          example: 591
+          type: number
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/paths/~1meta~1%7Bdomain%7D~1%7Bname%7D~1policy/post/responses/200/content/application~1json/schema"
+          description: A single metadata policy object.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Retrieve a Policy
+      tags:
+      - metadata
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: metadata
+  /task/assigned/{assigned}:
+    delete:
+      description: Removes all tasks assigned to a specific agent.
+      parameters:
+      - description: The agent or application used as a task delineation.
+        explode: false
+        in: path
+        name: assigned
+        required: true
+        schema:
+          example: janus_device_manager
+          type: string
+        style: simple
+      responses:
+        "204":
+          $ref: "#/components/responses/Empty"
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Delete assigned tasks
+      tags:
+      - task
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: task
+    get:
+      description: Queries all tasks assigned to a specific agent.
+      parameters:
+      - description: The agent or application used as a task delineation.
+        explode: false
+        in: path
+        name: assigned
+        required: true
+        schema:
+          example: janus_device_manager
+          type: string
+        style: simple
+      - description: Whether to retrieve archived tasks as well.
+        explode: true
+        in: query
+        name: archived
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/paths/~1task~1uuid~1%7Buuid%7D/get/responses/200/content/application~1json/schema"
+                type: array
+          description: List of task entities.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Retrieve all assigned tasks
+      tags:
+      - task
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: task
+  /task/uuid/{uuid}:
+    delete:
+      description: Removes a task by uuid.
+      parameters:
+      - description: The uuid of the requested task.
+        explode: false
+        in: path
+        name: uuid
+        required: true
+        schema:
+          example: b65e532d-4aef-46d4-b8f2-d6f3736ffd25
+          type: string
+        style: simple
+      responses:
+        "204":
+          $ref: "#/components/responses/Empty"
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Delete a task
+      tags:
+      - task
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: task
+    get:
+      description: Queries a task by uuid.
+      parameters:
+      - description: The uuid of the requested task.
+        explode: false
+        in: path
+        name: uuid
+        required: true
+        schema:
+          example: b65e532d-4aef-46d4-b8f2-d6f3736ffd25
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/_task_uuid__uuid__get_200_response"
+          description: A task entity.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Retrieve specific task
+      tags:
+      - task
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: task
+    put:
+      description: Updates a task via full update DTO.
+      parameters:
+      - description: The uuid of the requested task.
+        explode: false
+        in: path
+        name: uuid
+        required: true
+        schema:
+          example: b65e532d-4aef-46d4-b8f2-d6f3736ffd25
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SENSE_Task_Update_DTO"
+        description: A task update DTO.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/paths/~1task~1uuid~1%7Buuid%7D/get/responses/200/content/application~1json/schema"
+          description: A task entity.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Update a task
+      tags:
+      - task
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: task
+  /task/uuid/{uuid}/{status}:
+    put:
+      description: Updates a task's status and message.
+      parameters:
+      - description: The uuid of the requested task.
+        explode: false
+        in: path
+        name: uuid
+        required: true
+        schema:
+          example: b65e532d-4aef-46d4-b8f2-d6f3736ffd25
+          type: string
+        style: simple
+      - description: The new status of the requested task.
+        explode: false
+        in: path
+        name: status
+        required: true
+        schema:
+          description: The current status of the task.
+          enum:
+          - PENDING
+          - ACCEPTED
+          - WAITING
+          - FINISHED
+          - FAILED
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        description: The new status message.
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/paths/~1task~1uuid~1%7Buuid%7D/get/responses/200/content/application~1json/schema"
+          description: A task entity.
+        "500":
+          $ref: "#/components/responses/Error"
+      summary: Update a task status
+      tags:
+      - task
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: task
+components:
+  responses:
+    Error:
+      description: Internal server fault or standardized error response.
+    Empty:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/inline_object"
+      description: "A standard empty response, usually returned on update or creation\
+        \ requests."
+    Int:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/inline_object_1"
+      description: A standard response with a number.
+  schemas:
+    AddressAllocation:
+      description: This schema represents a specific address allocation.
+      example:
+        address: 192.168.66.15
+        scope: default
+        name: Dev5 IP 6
+        id: 552
+        expiry: 1698174979000
+        affiliate: urn:ogf:network:nrp-nautilus.io:2020:sn3700_s0:PortChannel501:vlanport+3987
+      properties:
+        id:
+          description: Unique ID of the address allocation.
+          example: 552
+          format: int64
+          type: integer
+        name:
+          description: Name of the address allocation.
+          example: Dev5 IP 6
+          type: string
+        address:
+          description: The address itself.
+          example: 192.168.66.15
+          type: string
+        expiry:
+          description: The address expiration timestamp.
+          example: 1698174979000
+          type: number
+        scope:
+          description: The address scope.
+          example: default
+          type: string
+        affiliate:
+          description: Name of the address allocation.
+          example: urn:ogf:network:nrp-nautilus.io:2020:sn3700_s0:PortChannel501:vlanport+3987
+          type: string
+      required:
+      - address
+      - id
+      - name
+      title: Address Allocation
+      type: object
+    AllocateAddressRequest:
+      example:
+        allocate:
+          netmask: netmask
+          scope: scope
+          batch: batch
+          exclusive: exclusive
+        name: Rucio Test IP
+        type: ID
+      properties:
+        name:
+          description: The name of the allocation.
+          example: Rucio Test IP
+          type: string
+        type:
+          enum:
+          - ID
+          - MAC
+          - IPv4
+          - IPv6
+          type: string
+        allocate:
+          $ref: "#/components/schemas/AllocateParams"
+      type: object
+    AllocateParams:
+      example:
+        netmask: netmask
+        scope: scope
+        batch: batch
+        exclusive: exclusive
+      properties:
+        batch:
+          type: string
+        exclusive:
+          type: string
+        netmask:
+          type: string
+        scope:
+          type: string
+      type: object
+    AddressPoolDTO:
+      description: This schema represents the limited DTO of an address pool.
+      example:
+        name: ESNet East Pool 4
+        pool: "fc00:3600::0/64,[...],fc00:3601::0/64"
+        id: 19
+        type: IPv4
+      properties:
+        id:
+          description: Unique ID of the address pool.
+          example: 19
+          type: number
+        name:
+          description: Human readable name of the address pool.
+          example: ESNet East Pool 4
+          type: string
+        type:
+          description: The type of address a pool manages.
+          enum:
+          - IPv4
+          - IPv6
+          - ID
+          - MAC
+          type: string
+        pool:
+          description: CSV string of pool data.
+          example: "fc00:3600::0/64,[...],fc00:3601::0/64"
+          type: string
+      required:
+      - id
+      - name
+      - pool
+      - type
+      title: Address Pool
+      type: object
+    CreateAddressPoolRequest:
+      example:
+        prefix_list:
+        - 10.0.0.1/24
+        - 10.0.0.1/24
+        prefix: prefix
+        name: Rucio Dev Pool
+        range: 192.168.1.1-192.168.1.255
+        type: IPv4
+      properties:
+        name:
+          description: The name of the address pool.
+          example: Rucio Dev Pool
+          type: string
+        type:
+          description: The type of addresses to allocate.
+          enum:
+          - ID
+          - MAC
+          - IPv4
+          - IPv6
+          example: IPv4
+          type: string
+        prefix:
+          description: The type of addresses to allocate.
+          type: string
+        range:
+          description: Create a pool from an address range.
+          example: 192.168.1.1-192.168.1.255
+          type: string
+        prefix_list:
+          description: Create a pool from multiple prefixes.
+          items:
+            example: 10.0.0.1/24
+            type: string
+          type: array
+      type: object
+    AddressRangeDTO:
+      description: This schema represents the full DTO of an address pool.
+      properties:
+        id:
+          description: Unique ID of the address pool.
+          example: 19
+          type: number
+        start:
+          description: Beginning of the pool address range.
+          example: 192.168.64.0
+          type: string
+        end:
+          description: End of the pool address range.
+          example: 192.168.127.255
+          type: string
+        allocations:
+          items:
+            $ref: "#/components/schemas/AddressAllocation"
+          type: array
+      required:
+      - allocations
+      - end
+      - id
+      - start
+      title: Address Range
+      type: object
+    ServiceIntent:
+      description: "This schema represents the structure of a service intent, used\
+        \ to create or modify a service instance."
+      properties:
+        service:
+          description: The type of service being created.
+          example: dnc
+          type: string
+        options:
+          description: Array of option flags.
+          items:
+            example: aws-form
+            type: string
+          type: array
+        data: {}
+        alias:
+          description: Alias to give to the created service instance.
+          example: DNC Demo
+          type: string
+      required:
+      - data
+      - service
+      title: Service Intent
+      type: object
+    ServiceProfileRef:
+      description: This schema represents a structured reference to a service profile.
+      properties:
+        uuid:
+          description: Profile UUID to lookup when reference resolves.
+          example: d1898051-fcfa-4920-bb3b-7f5918194def
+          type: string
+        params:
+          additionalProperties: true
+          description: Profile options map for additional arguments or parameters.
+          type: object
+      required:
+      - uuid
+      title: Service Profile Reference
+      type: object
+    ServiceRequest:
+      description: This schema represents a request for service creation or modification.
+      example:
+        service_instance_uuid: e94bb468-0de8-4cc1-beae-e3db7c5fdf47
+        proceed: "true"
+        data: "{}"
+        service: dnc
+        synchronous: "false"
+        options:
+        - aws-form
+        alias: DNC-Test 3
+        service_profile_uuid: 5fe1bae9-1c16-44de-be4d-527dd2b354d6
+        queries:
+        - "{}"
+        - "{}"
+      properties:
+        alias:
+          description: Alias to give to the created service instance.
+          example: DNC-Test 3
+          type: string
+        service:
+          description: "Service type: dnc, vcn, etc."
+          example: dnc
+          type: string
+        data:
+          description: Intent data package.
+          type: object
+        options:
+          example:
+          - aws-form
+          items:
+            type: string
+          type: array
+        service_instance_uuid:
+          description: Pre-determined service instance UUID.
+          example: e94bb468-0de8-4cc1-beae-e3db7c5fdf47
+          type: string
+        service_profile_uuid:
+          description: Backing profile UUID.
+          example: 5fe1bae9-1c16-44de-be4d-527dd2b354d6
+          type: string
+        queries:
+          items:
+            type: object
+          type: array
+        proceed:
+          description: Whether to proceed automatically through provisioning.
+          example: "true"
+          type: string
+        synchronous:
+          description: Whether to operate in synchronous/blocking mode.
+          example: "false"
+          type: string
+      title: Service Request
+      type: object
+    VerificationResult:
+      description: This schema represents the full result set from service instance
+        verification.
+      properties:
+        delta_uuid:
+          description: UUID of delta being verified.
+          example: de159dae-7b00-480c-b4ee-d34e637c68b0
+          type: string
+        creation_time:
+          description: When this verification run started.
+          example: 2021-04-05
+          type: string
+        verified_reduction:
+          description: JSON string of the verified reduction model.
+          example: (Reduction model JSON)
+          type: string
+        verified_addition:
+          description: JSON string of the verified addition model.
+          example: (Addition model JSON)
+          type: string
+        unverified_reduction:
+          description: JSON string of the unverified reduction model.
+          example: (Reduction model JSON)
+          type: string
+        unverified_addition:
+          description: JSON string of the unverified addition model.
+          example: (Addition model JSON)
+          type: string
+        reduction:
+          description: String boolean of whether the reduction is present.
+          enum:
+          - "true"
+          - "false"
+          type: string
+        addition:
+          description: String boolean of whether the addition is present.
+          enum:
+          - "true"
+          - "false"
+          type: string
+      required:
+      - addition
+      - creation_time
+      - delta_uuid
+      - reduction
+      title: Verification Data
+      type: object
+    FullProfile:
+      description: This schema represents the structure of a service intent profile.
+      properties:
+        uuid:
+          description: The profile's ID.
+          example: "[\"d1898051-fcfa-4920-bb3b-7f5918194def\"]"
+          title: The uuid schema
+          type: string
+        name:
+          description: The profile's user-given name.
+          example: "[\"DNC-102 for SENSE\"]"
+          title: The name schema
+          type: string
+        json:
+          description: "The profile intent itself, stored as a trimmed JSON string."
+          title: The json schema
+          type: string
+        owner:
+          description: The username of the profile owner.
+          example: "[\"aejimenez\"]"
+          title: The owner schema
+          type: string
+        description:
+          description: The profile's description.
+          example: "[\"For Tom and Jerry to use for pilot testing.\"]"
+          title: The description schema
+          type: string
+        created:
+          description: The profile's timestamp for creation.
+          format: date-time
+          title: The created schema
+          type: string
+        lastEdited:
+          description: The timestamp for when the profile was last edited.
+          format: date-time
+          title: The lastEdited schema
+          type: string
+        authorized:
+          description: Whether the profile carries an admin's authorization with it.
+          title: The authorized schema
+          type: boolean
+        editable:
+          description: Whether the profile can be edited by licensed users.
+          title: The editable schema
+          type: boolean
+        edit:
+          description: The JSON string for user-configured editable fields.
+          title: The editJson schema
+          type: string
+        licenses:
+          description: The profile's collection of given licenses.
+          example:
+          - ""
+          items:
+            $ref: "#/components/schemas/ProfileLicense"
+          title: The licenses schema
+          type: array
+      required:
+      - name
+      - uuid
+      type: object
+    SlimProfile:
+      description: This schema represents the structure of a service intent profile.
+      properties:
+        uuid:
+          description: The profile's ID.
+          example: "[\"d1898051-fcfa-4920-bb3b-7f5918194def\"]"
+          title: The uuid schema
+          type: string
+        name:
+          description: The profile's user-given name.
+          example: "[\"DNC-102 for SENSE\"]"
+          title: The name schema
+          type: string
+        owner:
+          description: The username of the profile owner.
+          example: "[\"aejimenez\"]"
+          title: The owner schema
+          type: string
+        description:
+          description: The profile's description.
+          example: "[\"For Tom and Jerry to use for pilot testing.\"]"
+          title: The description schema
+          type: string
+        created:
+          description: The profile's timestamp for creation.
+          format: date-time
+          title: The created schema
+          type: string
+        lastEdited:
+          description: The timestamp for when the profile was last edited.
+          format: date-time
+          title: The lastEdited schema
+          type: string
+        authorized:
+          description: Whether the profile carries an admin's authorization with it.
+          title: The authorized schema
+          type: boolean
+        editable:
+          description: Whether the profile can be edited by licensed users.
+          title: The editable schema
+          type: boolean
+        licenses:
+          description: The profile's collection of given licenses.
+          example:
+          - ""
+          items:
+            $ref: "#/components/schemas/ProfileLicense"
+          title: The licenses schema
+          type: array
+      required:
+      - name
+      - uuid
+      type: object
+    ProfileLicense:
+      description: A license given to a user to allow execution and possible customization
+        of a profile.
+      properties:
+        username:
+          description: The user that is being given the license.
+          example: "[\"xyang\"]"
+          title: The username schema
+          type: string
+        type:
+          description: "The type of license, tickets are only good for one instance\
+            \ creation, whereas allocations are returned when instances are deleted."
+          enum:
+          - ticket
+          - allocation
+          title: The type schema
+          type: string
+        remaining:
+          description: "For tickets, the number of remaining tickets. For allocations,\
+            \ the maximum number of active instances allowed at one time."
+          title: The remaining schema
+          type: number
+      required:
+      - remaining
+      - type
+      - username
+      type: object
+    Operation:
+      enum:
+      - cancel
+      - force_cancel
+      - release
+      - force_release
+      - provision
+      - reinstate
+      - rollback
+      - force_retry
+      - delete
+      - force_delete
+      - archive
+      - unarchive
+      - reset
+      - verify
+      - unverify
+      type: string
+    Intent:
+      description: A representation of a request for service instance creation or
+        modification.
+      properties:
+        id:
+          description: Service intent UUID.
+          example: d2c27d84-7de4-4683-80f6-de9a3783f36d
+          type: string
+        serviceInstanceUUID:
+          description: UUID for associated service instance.
+          example: cfcfdc14-7f0d-4ab6-b325-719aa715f891
+          type: string
+        serviceDeltaUUID:
+          description: UUID for associated service delta.
+          example: 00d6fab2-e117-40e8-adc7-ee1f60b71b3c
+          type: string
+        provisioned:
+          description: Whether or not the intent was or is successfully provisioned.
+          type: boolean
+        json:
+          description: "The service intent itself, in JSON string format."
+          type: string
+        creation_time:
+          description: SQL Timestamp for intent creation.
+          type: string
+      required:
+      - id
+      - json
+      - provisioned
+      - serviceDeltaUUID
+      - serviceInstanceUUID
+      type: object
+    Delta:
+      description: A service delta package.
+      properties:
+        id:
+          description: Service intent UUID.
+          example: d2c27d84-7de4-4683-80f6-de9a3783f36d
+          type: string
+        val:
+          description: "The service delta itself, in JSON string format."
+          type: string
+      type: object
+    IntentExpanded:
+      allOf:
+      - $ref: "#/components/schemas/Intent"
+      - properties:
+          delta:
+            $ref: "#/components/schemas/Delta"
+        type: object
+    Root_Schema:
+      example:
+      - state: CANCEL - READY
+        superState: CANCEL
+        subState: READY
+        lastState: PROPAGATED
+        lastError: null
+        alias: Stacktest 2
+        uuid: null
+        owner: admin
+        timestamp: 2023-07-03 10:39:10.0
+        type: Dynamic Network Connection
+        subType: Multi-Path P2P VLAN
+        archived: false
+        locked: false
+        modifiable: true
+        intents: null
+        drifted: false
+      properties:
+        state:
+          description: The concatenated phase and state string.
+          example: "[\"CANCEL - READY\"]"
+          type: string
+        superState:
+          $ref: "#/paths/~1instance~1%7BsiUUID%7D~1superstate~1%7Bstate%7D/put/parameters/1/schema"
+        subState:
+          $ref: "#/paths/~1instance~1%7BsiUUID%7D~1substatus/get/responses/200/content/application~1json/schema"
+        configState:
+          $ref: "#/paths/~1instance~1%7BsiUUID%7D~1status~1configuration/get/responses/200/content/application~1json/schema"
+        lastState:
+          $ref: "#/paths/~1instance~1%7BsiUUID%7D~1substatus/get/responses/200/content/application~1json/schema"
+        lastError:
+          description: The last error encountered by the instance.
+          type: string
+        alias:
+          description: The instance alias.
+          example: "[\"Stacktest 2\"]"
+          type: string
+        uuid:
+          description: The UUID of the instance.
+          type: string
+        owner:
+          description: The username of the owner of the instance.
+          example: "[\"admin\"]"
+          type: string
+        timestamp:
+          description: The creation timestamp of the instance.
+          example: "[\"2023-07-03 10:39:10.0\"]"
+          type: string
+        type:
+          description: The service type of the instance.
+          example: "[\"Dynamic Network Connection\"]"
+          type: string
+        subType:
+          description: The subsype of the instance's service type.
+          example: "[\"Multi-Path P2P VLAN\"]"
+          type: string
+        archived:
+          description: Whether the instance is archived (hidden from default view).
+          example: false
+          type: boolean
+        locked:
+          description: Whether the instance is locked (prevents most operations).
+          example: false
+          type: boolean
+        modifiable:
+          description: Whether the instance is modifiable (allows MODIFY operations).
+          example: false
+          type: boolean
+        intents:
+          description: The service intents that belong to the instance.
+          type: object
+        drifted:
+          description: Whether the instance has been marked as unstable (service is
+            no longer confirmed as online or valid).
+          example: false
+          type: boolean
+      title: Root Schema
+      type: object
+    _instance__siUUID__deltas_get_200_response_system:
+      description: A cache of an instance service or system delta.
+      example:
+        deltaUUID: 755aab21-90bf-4140-9200-a016d7cb1393
+        instanceUUID: d4c27d84-7de4-4683-80f6-de96u783f36d
+        delta: delta
+        id: 0.8008281904610115
+        type: SERVICE
+      properties:
+        id:
+          description: Generated database ID.
+          type: number
+        instanceUUID:
+          description: Service instance UUID.
+          example: d4c27d84-7de4-4683-80f6-de96u783f36d
+          type: string
+        type:
+          description: The type of delta.
+          enum:
+          - SERVICE
+          - SYSTEM
+          type: string
+        deltaUUID:
+          description: Delta UUID.
+          example: 755aab21-90bf-4140-9200-a016d7cb1393
+          type: string
+        delta:
+          description: Delta in string format.
+          type: string
+      type: object
+    _instance__siUUID__deltas_get_200_response:
+      example:
+        system:
+          deltaUUID: 755aab21-90bf-4140-9200-a016d7cb1393
+          instanceUUID: d4c27d84-7de4-4683-80f6-de96u783f36d
+          delta: delta
+          id: 0.8008281904610115
+          type: SERVICE
+        service: "{}"
+      properties:
+        service:
+          $ref: "#/paths/~1instance~1%7BsiUUID%7D~1deltas/get/responses/200/content/application~1json/schema/properties/system"
+        system:
+          $ref: "#/components/schemas/_instance__siUUID__deltas_get_200_response_system"
+      type: object
+    _instance__siUUID__plugins__type__get_200_response:
+      example:
+      - instanceUUID: 12bc9d51-2ddd-4189-b622-c02978f47fe5
+        type: SCHEDULING
+        value:
+          created:
+            nano: 233047000
+            epochSecond: 1688380752
+          schedules:
+          - label: urn:ogf:network:stackvtest:2022:topology:switch:EVTS.A-GOLE:conn+12bc9d51-2ddd-4189-b622-c02978f47fe5:vt+l2-policy-ONSA_Pilot_Conn:vlan+1855
+            start:
+              nano: 0
+              epochSecond: 1688380931
+            end:
+              nano: 0
+              epochSecond: 1688640131
+            active: false
+      - instanceUUID: 12bc9d51-2ddd-4189-b622-c02978f47fe5
+        type: DRIFTING
+        value:
+          drifted: false
+          notification: true
+          polling: true
+          recheckable: false
+          highPriority: false
+          correctExpired: true
+          correctUnstable: false
+      properties:
+        instanceUUID:
+          example: "[\"12bc9d51-2ddd-4189-b622-c02978f47fe5\"]"
+          title: The instanceUUID Schema
+          type: string
+        type:
+          example: "[\"SCHEDULING\",\"DRIFTING\"]"
+          title: The type Schema
+          type: string
+        value:
+          title: The value Schema
+          type: object
+      required:
+      - instanceUUID
+      - type
+      - value
+      type: object
+    _instance__siUUID__schedule_get_200_response_start:
+      description: Start time for the instance.
+      properties:
+        nano:
+          type: integer
+        epochSecond:
+          type: integer
+      type: object
+    _instance__siUUID__schedule_get_200_response_end:
+      description: End time for the instance.
+      properties:
+        nano:
+          type: integer
+        epochSecond:
+          type: integer
+      type: object
+    _instance__siUUID__schedule_get_200_response:
+      example:
+      - label: urn:ogf:network:stackvtest:2022:topology:switch:EVTS.A-GOLE:conn+12bc9d51-2ddd-4189-b622-c02978f47fe5:vt+l2-policy-ONSA_Pilot_Conn:vlan+1855
+        start:
+          nano: 0
+          epochSecond: 1688380931
+        end:
+          nano: 0
+          epochSecond: 1688640131
+        active: false
+      properties:
+        label:
+          description: The reference label given to the schedule.
+          example: "[\"urn:ogf:network:stackvtest:2022:topology:switch:EVTS.A-GOLE:conn+12bc9d51-2ddd-4189-b622-c02978f47fe5:vt+l2-policy-ONSA_Pilot_Conn:vlan+1855\"\
+            ]"
+          type: string
+        start:
+          $ref: "#/components/schemas/_instance__siUUID__schedule_get_200_response_start"
+        end:
+          $ref: "#/components/schemas/_instance__siUUID__schedule_get_200_response_end"
+        active:
+          description: Whether the connection is active.
+          type: boolean
+      required:
+      - active
+      - label
+      type: object
+    Address_Pool_ACL:
+      description: This schema represents an access control configuration for an address
+        pool.
+      example:
+        level: READ
+        pool:
+          name: ESNet East Pool 4
+          pool: "fc00:3600::0/64,[...],fc00:3601::0/64"
+          id: 19
+          type: IPv4
+        id: 54
+        username: tester
+      properties:
+        id:
+          description: Unique ID of the ACL entry.
+          example: 54
+          type: number
+        pool:
+          $ref: "#/components/schemas/AddressPoolDTO"
+        username:
+          description: Username being assigned permissions.
+          example: tester
+          type: string
+        level:
+          description: Permission level for this user.
+          example: READ
+          type: string
+      required:
+      - id
+      - name
+      - pool
+      - type
+      title: Address Pool ACL
+      type: object
+    _meta__domain___name__get_200_response:
+      oneOf:
+      - $ref: "#/paths/~1meta~1%7Bdomain%7D~1%7Bname%7D/post/responses/200/content/application~1json/schema"
+      - type: object
+    _meta__domain___name__post_request:
+      oneOf:
+      - type: object
+      - type: string
+    SENSE_Metadata:
+      description: This schema represents a record of the SENSE metadata service.
+      example:
+        owner: ajimenez
+        data: |-
+          {
+            "controller": {
+              "foo": "bar"
+            },
+          ...
+        edited: 2023-07-11 12:14:09.0
+        created: 2023-07-03 10:39:10.0
+        name: JANUS/overview
+      properties:
+        name:
+          description: The unique compsite id of the metadata record. Composed of
+            a service domain and record name separated by a slash.
+          example: JANUS/overview
+          type: string
+        data:
+          description: "The value of the record, encoded as a JSON in string format."
+          example: |-
+            {
+              "controller": {
+                "foo": "bar"
+              },
+            ...
+          type: string
+        owner:
+          description: The user that created and is responsible for this record.
+          example: ajimenez
+          type: string
+        created:
+          description: The timestamp of the record's creation.
+          example: 2023-07-03 10:39:10.0
+          type: string
+        edited:
+          description: The timestamp of the record's last edit.
+          example: 2023-07-11 12:14:09.0
+          type: string
+      required:
+      - data
+      - name
+      - owner
+      title: SENSE Metadata
+      type: object
+    SENSE_Metadata_Update_DTO:
+      description: This schema represents an update object for SENSE metadata values.
+      properties:
+        path:
+          description: "A JSON path for the specified value entry. Requires an existing\
+            \ key at this path. Can use dot or bracket notation, as specified at https://github.com/json-path/JsonPath"
+          example: $.agents.test_agent.host.fqdn
+          type: string
+        value:
+          description: "The new value of the record, encoded as a JSON in string format.\
+            \ Can set nested objects in this way."
+          example: "[\"localhost\",\"{\\\"foo\\\":\\\"bar\\\",\\\"test\\\":[\\\"1\\\
+            \", \\\"2\\\", \\\"3\\\"]}\"]"
+          type: string
+      required:
+      - path
+      - value
+      title: SENSE Metadata Update DTO
+      type: object
+    SENSE_Metadata_Policy:
+      description: This schema represents an access or validation policy for a metadata
+        record.
+      properties:
+        name:
+          description: The human-readable name of the policy.
+          example: janus-agent-access
+          type: string
+        type:
+          description: Whether the policy is involved with access or value validation.
+          enum:
+          - ACCESS
+          - VALIDATION
+          type: string
+        principal:
+          description: The username or group being moderated.
+          example: playwright-tester
+          type: string
+        object:
+          description: "The target of the policy, usually a metadata JSONPath."
+          example: "$.agents[*].host"
+          type: string
+        level:
+          description: The level at which the principal is given read or write privileges.
+          enum:
+          - NONE
+          - READ
+          - WRITE
+          type: string
+      title: SENSE Metadata Policy
+      type: object
+    SENSE_Metadata_Policy_1:
+      description: This schema represents an access or validation policy for a metadata
+        record.
+      example:
+        principal: playwright-tester
+        level: NONE
+        name: janus-agent-access
+        id: 2131
+        type: ACCESS
+        object: "$.agents[*].host"
+      properties:
+        id:
+          description: The policy id.
+          example: 2131
+          type: number
+        name:
+          description: The human-readable name of the policy.
+          example: janus-agent-access
+          type: string
+        type:
+          description: Whether the policy is involved with access or value validation.
+          enum:
+          - ACCESS
+          - VALIDATION
+          type: string
+        principal:
+          description: The username or group being moderated.
+          example: playwright-tester
+          type: string
+        object:
+          description: "The target of the policy, usually a metadata JSONPath."
+          example: "$.agents[*].host"
+          type: string
+        level:
+          description: The level at which the principal is given read or write privileges.
+          enum:
+          - NONE
+          - READ
+          - WRITE
+          type: string
+      required:
+      - level
+      - object
+      - principal
+      - type
+      title: SENSE Metadata Policy
+      type: object
+    _task_uuid__uuid__get_200_response:
+      description: A task stored within the SENSE orchestrator.
+      example:
+        archived: true
+        expires: 2025-01-08T00:04:17Z
+        expired: true
+        created: 2024-11-06T19:58:18Z
+        statusTime: 2024-11-09T14:12:45Z
+        taskClass: net.maxgigapop.mrs.addon.janus.data.JANUSTaskConfig
+        assigned: janus_device_manager
+        id: 0.8008281904610115
+        uuid: 48ab0cfc-3f50-4c4e-8c34-463156760022
+        config: "{\"command\":\"add_user\",\"target\":\"nrp-04.nrp-nautilus.io\",\"\
+          principal\":\"admin\",\"context\":\"b4c48872-8266-471e-ad47-903c6d447ec6\"\
+          }"
+        statusMessage: "{\"callbackURL\": \"random_url\"}"
+        status: "{}"
+      properties:
+        id:
+          description: Auto-generated ID.
+          type: number
+        uuid:
+          description: The natural UUID of the task.
+          example: 48ab0cfc-3f50-4c4e-8c34-463156760022
+          type: string
+        taskClass:
+          description: The Java class that maps the task's configuration.
+          example: net.maxgigapop.mrs.addon.janus.data.JANUSTaskConfig
+          type: string
+        assigned:
+          description: The assigned agent or application. This can be likened to a
+            tag or queue/topic name.
+          example: janus_device_manager
+          type: string
+        archived:
+          description: Whether the task has been archived.
+          type: boolean
+        created:
+          description: The timestamp of the task's creation.
+          example: 2024-11-06T19:58:18Z
+          type: string
+        expires:
+          description: The timestamp of the task's expiration.
+          example: 2025-01-08T00:04:17Z
+          type: string
+        status:
+          $ref: "#/paths/~1task~1uuid~1%7Buuid%7D~1%7Bstatus%7D/put/parameters/1/schema"
+        statusTime:
+          description: The timestamp of the task's last status update.
+          example: 2024-11-09T14:12:45Z
+          type: string
+        statusMessage:
+          description: An optional message or JSON string to attach to any status
+            update.
+          example: "{\"callbackURL\": \"random_url\"}"
+          type: string
+        config:
+          description: The immutable configuration of the task itself.
+          example: "{\"command\":\"add_user\",\"target\":\"nrp-04.nrp-nautilus.io\"\
+            ,\"principal\":\"admin\",\"context\":\"b4c48872-8266-471e-ad47-903c6d447ec6\"\
+            }"
+          type: object
+        expired:
+          description: Whether the task has expired.
+          type: boolean
+      type: object
+    SENSE_Task_Update_DTO:
+      description: This schema represents an update object for SENSE Task records.
+      properties:
+        status:
+          $ref: "#/paths/~1task~1uuid~1%7Buuid%7D~1%7Bstatus%7D/put/parameters/1/schema"
+        message:
+          description: The optional status message to attack to this task.
+          example: "[\"{\\\"foo\\\":\\\"bar\\\",\\\"test\\\":[\\\"1\\\", \\\"2\\\"\
+            , \\\"3\\\"]}\",\"$callback_url\"]"
+          type: string
+        archived:
+          description: An optional flag to archive or unarchive the task.
+          type: boolean
+      title: SENSE Task Update DTO
+      type: object
+    inline_object:
+      example:
+        data: {}
+      properties:
+        data:
+          additionalProperties: false
+          description: An empty object.
+          example: {}
+          type: object
+      required:
+      - data
+      - meta
+      type: object
+    inline_object_1_meta:
+      description: "The meta schema includes supporting information about the response,\
+        \ such as the request that it is responding to and the handling resource endpoint."
+      properties:
+        request:
+          additionalProperties: true
+          description: "Metadata associated with the original request, such as path,\
+            \ method, and any form paremeters."
+          example:
+            path: https://localhost:8443/StackV-web/restapi/data/test
+            method: GET
+            form: "{}"
+          title: The request schema
+          type: object
+        resource:
+          description: The resource endpoint that served this response.
+          example: net.maxgigapop.mrs.rest.KeycloakResource
+          title: The resource schema
+          type: string
+      required:
+      - request
+      type: object
+    inline_object_1_data:
+      description: Response data package.
+      properties:
+        result:
+          description: Number response.
+          items:
+            type: number
+          maxItems: 1
+          type: array
+      required:
+      - result
+      type: object
+    inline_object_1:
+      properties:
+        meta:
+          $ref: "#/components/schemas/inline_object_1_meta"
+        data:
+          $ref: "#/components/schemas/inline_object_1_data"
+      required:
+      - data
+      - meta
+      type: object
+  securitySchemes:
+    OAuth2:
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.dev3.virnao.com/auth/realms/StackV/protocol/openid-connect/auth
+          scopes:
+            openid: OIDC Mode.
+          tokenUrl: https://auth.dev3.virnao.com/auth/realms/StackV/protocol/openid-connect/token
+      type: oauth2

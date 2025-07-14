@@ -796,6 +796,7 @@ paths:
         - address
       summary: Retrieve Pools
       description: Retrieves all accessible address pools.
+      operationId: retrievePools
       responses:
         '200':
           description: List of basic address pool DTOs.
@@ -812,41 +813,12 @@ paths:
         - address
       summary: Add New Pool
       description: Creates a new address pool.
+      operationId: createPool
       requestBody:
-        description: Pool creation request parameters.
-        required: true
         content:
           application/json:
             schema:
-              type: object
-              title: Pool Request
-              description: This schema represents a request to create a new address pool.
-              required:
-                - name
-                - type
-              properties:
-                name:
-                  type: string
-                  description: The name of the address pool.
-                  example: Rucio Dev Pool
-                type:
-                  type: string
-                  description: The type of addresses to allocate.
-                  example: IPv4
-                prefix:
-                  type: string
-                  description: Create a pool from a prefix.
-                  example: 10.0.12.1/24
-                range:
-                  type: string
-                  description: Create a pool from an address range.
-                  example: 192.168.1.1-192.168.1.255
-                prefix_list:
-                  type: array
-                  description: Create a pool from multiple prefixes.
-                  items:
-                    type: string
-                    example: 10.0.0.1/24
+              $ref: '#/components/schemas/CreateAddressPoolRequest'
       responses:
         '201':
           description: Pool created.
@@ -915,7 +887,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AddressAllocationDTO'
+                  $ref: '#/components/schemas/AddressAllocation'
         '500':
           $ref: '#/components/responses/Error'
     post:
@@ -933,33 +905,10 @@ paths:
           example: Rucio Test Pool
       requestBody:
         description: Allocation request parameters.
-        required: true
         content:
           application/json:
             schema:
-              type: object
-              title: Allocation Request
-              description: This schema represents a request to allocate a new address from a specified pool.
-              required:
-                - name
-                - type
-                - pool
-                - allocate
-              properties:
-                name:
-                  type: string
-                  description: The name of the allocation.
-                  example: Rucio Test IP
-                type:
-                  type: string
-                  description: The type of address.
-                  example: IPv4
-                allocate:
-                  type: object
-                  properties:
-                    batch:
-                      type: number
-                      example: 5
+              $ref: '#/components/schemas/AllocateAddressRequest'
       responses:
         '200':
           description: List of addresses allocated.
@@ -1000,7 +949,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AddressAllocationDTO'
+                  $ref: '#/components/schemas/AddressAllocation'
         '500':
           $ref: '#/components/responses/Error'
     delete:
@@ -1847,18 +1796,19 @@ paths:
           $ref: '#/components/responses/Error'
 components:
   schemas:
-    AddressAllocationDTO:
+    AddressAllocation:
       type: object
       title: Address Allocation
       description: This schema represents a specific address allocation.
-      required:
+      required:   # AES Double Check The Required List.
         - id
         - name
         - address
       properties:
         id:
-          type: number
+          type: integer 
           description: Unique ID of the address allocation.
+          format: int64
           example: 552
         name:
           type: string
@@ -1868,7 +1818,7 @@ components:
           type: string
           description: The address itself.
           example: 192.168.66.15
-        expiry:
+        expiry:   # AES shoud expiry be? type: string format: date-time
           type: number
           description: The address expiration timestamp.
           example: 1698174979000
@@ -1880,6 +1830,33 @@ components:
           type: string
           description: Name of the address allocation.
           example: 'urn:ogf:network:nrp-nautilus.io:2020:sn3700_s0:PortChannel501:vlanport+3987'
+    AllocateAddressRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the allocation.
+          example: Rucio Test IP
+        type:
+          type: string
+          enum:
+          - ID
+          - MAC
+          - IPv4
+          - IPv6
+        allocate:
+          $ref: '#/components/schemas/AllocateParams'
+    AllocateParams:
+      type: object
+      properties:
+        batch:
+          type: string
+        exclusive:
+          type: string
+        netmask:
+          type: string
+        scope:
+          type: string
     AddressPoolDTO:
       type: object
       title: Address Pool
@@ -1910,6 +1887,35 @@ components:
           type: string
           description: CSV string of pool data.
           example: 'fc00:3600::0/64,[...],fc00:3601::0/64'
+    CreateAddressPoolRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the address pool.
+          example: Rucio Dev Pool
+        type:
+          type: string
+          description: The type of addresses to allocate.
+          example: IPv4
+          enum:
+          - ID
+          - MAC
+          - IPv4
+          - IPv6
+        prefix:
+          type: string
+          description: The type of addresses to allocate.
+        range:
+          type: string
+          description: Create a pool from an address range.
+          example: 192.168.1.1-192.168.1.255
+        prefix_list:
+          type: array
+          description: Create a pool from multiple prefixes.
+          items:
+             type: string
+             example: 10.0.0.1/24
     AddressRangeDTO:
       type: object
       title: Address Range
@@ -1935,7 +1941,7 @@ components:
         allocations:
           type: array
           items:
-            $ref: '#/components/schemas/AddressAllocationDTO'
+            $ref: '#/components/schemas/AddressAllocation'
     ServiceIntent:
       type: object
       title: Service Intent

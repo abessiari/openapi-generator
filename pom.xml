@@ -47,16 +47,17 @@
                 <configuration>
 <!--
                     <inputSpec>https://raw.githubusercontent.com/OpenAPITools/openapi-generator/master/modules/openapi-generator/src/test/resources/3_0/petstore.yaml</inputSpec>
+                    <inputSpec>openapi-stackv-mine.yaml</inputSpec>
 -->
                     <inputSpec>openapi-stackv-webapp-api.yaml</inputSpec>
-                    <generatorName>jaxrs-jersey</generatorName>
-                    <library>jersey2</library>
+                    <generatorName>jaxrs-spec</generatorName>
                     <dateLibrary>java8</dateLibrary>
-                    <output>${basedir}/out</output>
+                    <output>${basedir}/out2</output>
                     <templateDirectory>${project.basedir}/templates</templateDirectory>
                     <modelPackage>net.maxgigapop.mrs.model</modelPackage>
                     <apiPackage>net.maxgigapop.mrs.api</apiPackage>
                     <configOptions>
+                    <interfaceOnly>true</interfaceOnly>
                     </configOptions>
                 </configuration>
                 <executions>
