@@ -10,6 +10,7 @@
    - [Supported Drivers](#drivers)
    - [Example Service Profiles](#example_service_profiles)
    - [Users And Role Mappings](#users_and_role_mappings)
+   - [Delegation](#delegation)
    - [Rest API](#rest_api)
    - [Add-Ons](#add_ons)
    - [Troubleshooting](#troubleshooting)
@@ -91,6 +92,9 @@ TODO
 TODO
 
 #### <a name="users_and_role_mappings"></a>Users And Role Mappings
+TODO
+
+#### <a name="delegation"></a>Delegation
 TODO
 
 #### <a name="rest_api"></a>Rest API
