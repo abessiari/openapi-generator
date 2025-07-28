@@ -10,7 +10,7 @@
    - [Supported Drivers](#drivers)
    - [Example Service Profiles](#example_service_profiles)
    - [Users And Role Mappings](#users_and_role_mappings)
-   - [Rest API](rest_api)
+   - [Rest API](#rest_api)
 
 ## <a name="intro"></a>Introduction
 The SENSE system provides the mechanisms to enable multi-domain orchestration for a wide variety of network and other cyberinfrastructure resources in a highly customized manner.  These orchestrated services can be customized for individual domain science workflow systems and requirements.  SENSE services include:
