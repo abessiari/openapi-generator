@@ -22,7 +22,7 @@ The SENSE system provides the mechanisms to enable multi-domain orchestration fo
 
 
 ## <a name="install"></a>Installation
-SENSE-O consists of two major components: the Orchestrator server and the Keycloak SSO server that can be separately deployed. The SENSE-O deployment is container based and a guide for a kubernets deployment can be found [here](https://github.com/StackV/sense-helm/)
+SENSE-O consists of two major components: the Orchestrator server and the Keycloak SSO server that can be separately deployed. The SENSE-O deployment is container based and a guide for a kubernetes deployment can be found [here](https://github.com/StackV/sense-helm/)
 
 ## <a name="quickstart"></a>Quick Start
 
