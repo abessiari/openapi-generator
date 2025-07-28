@@ -28,8 +28,6 @@ SENSE-O consists of two major components: the Orchestrator server and the Keyclo
 - [ ] Assumes you have created an <i>admin</i> user to access sense-o portal during the installation.
 - [ ] Assumes you are logged in to the sense portal. 
 
-the <i>Drivers</i> tab 
-
 #### <a name="add_driver"></a>Add Driver
 Use the <i>Drivers</i> tab to create a driver. <i>Fabric</i> Driver is used here as an example.  
 You can use your own `topologyUri` and all the other fields can be found in the <i>Fabric</i> token. 
